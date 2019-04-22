@@ -130,7 +130,14 @@ class LXDClient
 
         response.reading_body(@socket, request.response_body_permitted?) {}
 
-        response = JSON.parse(response.body)
+        begin
+            response = JSON.parse(response.body)
+        rescue StandardError => e
+            raise e unless e.message.include?('A JSON text must at least'\
+                'contain two octets! (JSON::ParserError)')
+
+            response.reading_body(@socket, request.response_body_permitted?) {}
+        end
 
         raise LXDError, response if response['type'] == 'error'
 
